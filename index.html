@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bharat AI Stock Predictor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+ font-family:Arial,sans-serif;
+ background:#080e1c;color:#eef3ff;
+ min-height:100vh;padding:20px;
+}
+.container{max-width:1050px;margin:auto}
+header{text-align:center;padding:30px 10px}
+.logo{font-size:38px}
+h1{font-size:30px;color:#55d6a5;margin:12px}
+header p{color:#9eacc5}
+.card{
+ background:#111c30;border:1px solid #263653;
+ border-radius:16px;padding:22px;margin:18px 0;
+}
+h2{font-size:19px;margin-bottom:18px;color:#55d6a5}
+label{display:block;margin:14px 0 7px;color:#bdc9df}
+input,select,textarea{
+ width:100%;padding:13px;border-radius:9px;
+ border:1px solid #34445f;background:#0a1426;
+ color:white;font-size:15px;outline:none;
+}
+textarea{resize:vertical;min-height:90px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+button{
+ background:#24c58b;color:#061b17;border:0;
+ padding:14px 20px;border-radius:9px;
+ font-weight:bold;font-size:15px;cursor:pointer;
+ margin-top:18px;width:100%;
+}
+button:hover{background:#4ce5ac}
+button:disabled{opacity:.5;cursor:wait}
+.note{font-size:12px;color:#9baac3;line-height:1.7}
+.result{
+ white-space:pre-wrap;line-height:1.8;
+ color:#e0e9fa;overflow-wrap:anywhere;
+}
+.status{color:#55d6a5;margin-top:12px}
+.pills{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.pills button{width:auto;margin:0;padding:9px 13px;font-size:12px}
+footer{text-align:center;color:#8795ad;padding:25px;font-size:12px}
+@media(max-width:600px){
+ body{padding:10px}
+ .grid{grid-template-columns:1fr}
+ h1{font-size:24px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+ <div class="logo">🇮🇳 📈</div>
+ <h1>BHARAT AI STOCK PREDICTOR</h1>
+ <p>भारतीय शेयर बाजार का AI आधारित शैक्षणिक विश्लेषण</p>
+</header>
+
+<div class="card">
+<h2>🔑 Groq API सेटिंग</h2>
+
+<label>अपनी Groq API Key डालें</label>
+<input type="password" id="apiKey" placeholder="gsk_..." autocomplete="off">
+
+<label>AI मॉडल चुनें</label>
+<select id="model">
+ <option value="openai/gpt-oss-120b">GPT OSS 120B (Default)</option>
+ <option value="openai/gpt-oss-20b">GPT OSS 20B</option>
+ <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+</select>
+
+<p class="note">
+API Key इस पेज में केवल तब तक रहती है जब तक पेज खुला है।
+इसे किसी के साथ शेयर न करें।
+</p>
+</div>
+
+<div class="card">
+<h2>🔍 शेयर की जानकारी</h2>
+
+<label>कंपनी का नाम</label>
+<input id="company" placeholder="जैसे Reliance Industries">
+
+<div class="grid">
+ <div>
+  <label>शेयर सिंबल</label>
+  <input id="symbol" placeholder="जैसे RELIANCE">
+ </div>
+ <div>
+  <label>एक्सचेंज</label>
+  <select id="exchange">
+   <option>NSE</option>
+   <option>BSE</option>
+  </select>
+ </div>
+</div>
+
+<label>वर्तमान शेयर मूल्य (₹)</label>
+<input type="number" id="price" placeholder="जैसे 1450" min="0" step="any">
+
+<label>पिछले शेयर मूल्यों का डेटा (पुराने से नए तक)</label>
+<textarea id="history" placeholder="उदाहरण: 1400, 1410, 1390, 1430, 1450"></textarea>
+
+<p class="note">
+सभी कीमतें वास्तविक और एक ही समय-अंतराल की होनी चाहिए।
+अभी लाइव मार्केट डेटा अपने आप नहीं आता।
+</p>
+
+<div class="pills">
+<button onclick="sample('RELIANCE','Reliance Industries')">Reliance</button>
+<button onclick="sample('TCS','Tata Consultancy Services')">TCS</button>
+<button onclick="sample('INFY','Infosys')">Infosys</button>
+<button onclick="sample('HDFCBANK','HDFC Bank')">HDFC Bank</button>
+<button onclick="sample('TATAMOTORS','Tata Motors')">Tata Motors</button>
+</div>
+
+<button id="analyzeBtn" onclick="analyze()">🤖 AI से विश्लेषण करें</button>
+<div class="status" id="status"></div>
+</div>
+
+<div class="card">
+<h2>📊 AI स्टॉक विश्लेषण रिपोर्ट</h2>
+<div id="result" class="result">
+आपका AI विश्लेषण यहाँ दिखाई देगा...
+</div>
+</div>
+
+<footer>
+BHARAT AI STOCK PREDICTOR © 2026<br>
+यह केवल शैक्षणिक जानकारी है, निवेश सलाह नहीं।
+</footer>
+
+</div>
+
+<script>
+function sample(symbol,name){
+ document.getElementById("symbol").value=symbol;
+ document.getElementById("company").value=name;
+}
+
+async function analyze(){
+
+ const key=document.getElementById("apiKey").value.trim();
+ const model=document.getElementById("model").value;
+ const company=document.getElementById("company").value.trim();
+ const symbol=document.getElementById("symbol").value.trim();
+ const exchange=document.getElementById("exchange").value;
+ const price=Number(document.getElementById("price").value);
+ const history=document.getElementById("history").value.trim();
+
+ const status=document.getElementById("status");
+ const result=document.getElementById("result");
+ const btn=document.getElementById("analyzeBtn");
+
+ if(!key || !company || !symbol || !price || price<=0 || !history){
+  alert("कृपया सभी जानकारी सही तरीके से भरें।");
+  return;
+ }
+
+ const prices=history.split(",").map(x=>Number(x.trim()));
+
+ if(prices.length<3 || prices.some(x=>!Number.isFinite(x)||x<=0)){
+  alert("कम से कम 3 सही ऐतिहासिक कीमतें डालें।");
+  return;
+ }
+
+ btn.disabled=true;
+ status.textContent="⏳ AI आपका डेटा विश्लेषण कर रहा है...";
+ result.textContent="कृपया प्रतीक्षा करें...";
+
+ const prompt=`
+तुम भारतीय शेयर बाजार के शैक्षणिक विश्लेषण सहायक हो।
+हमेशा सरल हिंदी में उत्तर दो।
+
+कंपनी: ${company}
+स्टॉक सिंबल: ${symbol}
+एक्सचेंज: ${exchange}
+यूजर द्वारा दिया गया वर्तमान मूल्य: ₹${price}
+पुराने से नए क्रम में कीमतें: ${prices.join(", ")}
+
+इन जानकारियों के आधार पर रिपोर्ट बनाओ:
+
+1. कंपनी का परिचय
+2. दिए गए डेटा का ट्रेंड विश्लेषण
+3. कीमतों में बदलाव का सामान्य विवरण
+4. तेजी, मंदी या स्थिरता के संकेत
+5. संभावित सकारात्मक परिदृश्य
+6. संभावित नकारात्मक परिदृश्य
+7. कौन सी अतिरिक्त जानकारी विश्लेषण बेहतर कर सकती है
+8. निष्कर्ष और जोखिम
+
+महत्वपूर्ण नियम:
+- कोई काल्पनिक लाइव डेटा मत बनाना।
+- भविष्य की कीमत की गारंटी मत देना।
+- निश्चित टारगेट प्राइस या रिटर्न मत गढ़ना।
+- खरीदने या बेचने की सलाह मत देना।
+- स्पष्ट करना कि यह केवल शैक्षणिक विश्लेषण है।
+- दिए गए डेटा से आगे के तथ्य पता न हों तो ऐसा साफ बताना।
+- उत्तर हिंदी में और आसान भाषा में देना।
+`;
+
+ try{
+
+  const response=await fetch(
+   "https://api.groq.com/openai/v1/chat/completions",
+   {
+    method:"POST",
+    headers:{
+     "Content-Type":"application/json",
+     "Authorization":"Bearer "+key
+    },
+    body:JSON.stringify({
+     model:model,
+     messages:[
+      {
+       role:"system",
+       content:"तुम एक जिम्मेदार भारतीय शेयर बाजार के शैक्षणिक AI विश्लेषक हो।"
+      },
+      {role:"user",content:prompt}
+     ],
+     temperature:0.3,
+     max_tokens:1500
+    })
+   }
+  );
+
+  const data=await response.json();
+
+  if(!response.ok){
+   throw new Error(data.error?.message || "API Error: "+response.status);
+  }
+
+  const answer=data.choices?.[0]?.message?.content;
+
+  if(!answer) throw new Error("AI से कोई उत्तर नहीं मिला।");
+
+  result.textContent=answer;
+  status.textContent="✅ विश्लेषण पूरा हुआ!";
+
+ }catch(error){
+  result.textContent="त्रुटि: "+error.message;
+  status.textContent="❌ विश्लेषण असफल";
+ }finally{
+  btn.disabled=false;
+ }
+}
+</script>
+</body>
+</html>
